@@ -183,20 +183,57 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 1000);
 
-// ===== MUSIC TOGGLE (visual only) =====
+// ===== MUSIC TOGGLE (Autoplay & Manual) =====
 let musicOn = false;
 
 const musicBtn = document.getElementById('music-toggle');
 const audioBars = document.getElementById('audio-bars');
 const bgMusic = document.getElementById('bg-music');
 
-musicBtn.addEventListener('click', () => {
-  musicOn = !musicOn;
-  musicBtn.classList.toggle('playing', musicOn);
-  audioBars.classList.toggle('paused', !musicOn);
+// Function to handle turning the music ON
+function playMusic() {
+  musicOn = true;
+  musicBtn.classList.add('playing');
+  audioBars.classList.remove('paused');
+  bgMusic.play().catch(error => {
+    console.log("Autoplay prevented by browser. Waiting for user interaction.");
+    musicOn = false;
+    musicBtn.classList.remove('playing');
+    audioBars.classList.add('paused');
+  });
+}
+
+// Function to handle pausing the music
+function pauseMusic() {
+  musicOn = false;
+  musicBtn.classList.remove('playing');
+  audioBars.classList.add('paused');
+  bgMusic.pause();
+}
+
+// 1. Attempt to autoplay when the script loads
+window.addEventListener('DOMContentLoaded', () => {
+  playMusic();
+  
+  // 2. Fallback: If autoplay fails, play on the very first user interaction
+  const emergencyAutoplay = () => {
+    if (!musicOn) {
+      playMusic();
+    }
+    // Remove the listener immediately so it doesn't keep firing
+    document.removeEventListener('click', emergencyAutoplay);
+  };
+  document.addEventListener('click', emergencyAutoplay);
+});
+
+// 3. Manual toggle button listener
+musicBtn.addEventListener('click', (e) => {
+  // Prevent the document click listener from conflicting if it hasn't fired yet
+  e.stopPropagation(); 
+  
   if (musicOn) {
-    bgMusic.play();
+    pauseMusic();
   } else {
-    bgMusic.pause();
+    playMusic();
   }
 });
